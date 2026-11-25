@@ -16,3 +16,21 @@ h2>Calculator</h2>
   Number(a.value) + Number(b.value)
 ">Walitti ida'i</button>
 <p>Deebii: <span id="r"></span></p>
+<h2>Jechoota Beektotaa</h2>
+<blockquote id="jecha" style="font-size:20px; max-width:500px; margin:20px auto;"></blockquote>
+<button onclick="haaraa()">Jecha haaraa</button>
+
+<script>
+const jechoota = [
+  { t: "Beekumsi humna dha.", n: "Francis Bacon" },
+  { t: "Ogummaan dhugaa tokkicha waan hin beekne beekuu dha.", n: "Socrates" },
+  { t: "Barnoonni meeshaa waraanaa humna guddaa qabu dha; addunyaa jijjiiruuf si gargaara.", n: "Nelson Mandela" },
+  { t: "Mul'anni beekumsa caalaa barbaachisaa dha.", n: "Albert Einstein" },
+  { t: "Imala kiilomeetira kumaa tarkaanfii tokkoon jalqaba.", n: "Lao Tzu" }
+];
+
+function haaraa() {
+  const j = jechoota[Math.floor(Math.random() * jechoota.length)];
+  document.getElementById("jecha").innerHTML = "“" + j.t + "”<br><small>— " + j.n + "</small>";
+}
+haaraa();

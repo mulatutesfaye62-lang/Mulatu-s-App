@@ -1,36 +1,77 @@
 <!DOCTYPE html>
-<html>
+<html lang="om">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>App Mulatu</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0d1117;
+      color: white;
+      text-align: center;
+      padding: 30px 20px;
+    }
+    h1, h2 { color: #58a6ff; }
+    input {
+      padding: 10px;
+      font-size: 16px;
+      margin: 5px;
+      width: 130px;
+      border-radius: 6px;
+      border: none;
+    }
+    button {
+      background: #238636;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 8px;
+      margin: 8px;
+    }
+    .box {
+      background: #161b22;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 500px;
+    }
+  </style>
 </head>
 <body>
   <h1>Akkam! Kun app koo ti.</h1>
   <p>Hojii koo jalqabeera.</p>
+
+  <div class="box">
+    <h2>Calculator</h2>
+    <input id="a" type="number" placeholder="Lakkoofsa 1">
+    <input id="b" type="number" placeholder="Lakkoofsa 2">
+    <br>
+    <button onclick="document.getElementById('r').innerText = Number(document.getElementById('a').value) + Number(document.getElementById('b').value)">Walitti ida'i</button>
+    <p>Deebii: <span id="r"></span></p>
+  </div>
+
+  <div class="box">
+    <h2>Jechoota Beektotaa</h2>
+    <blockquote id="jecha" style="font-size:20px; margin:15px 0;"></blockquote>
+    <button onclick="haaraa()">Jecha haaraa</button>
+  </div>
+
+  <script>
+    const jechoota = [
+      { t: "Beekumsi humna dha.", n: "Francis Bacon" },
+      { t: "Ogummaan dhugaa tokkicha waan hin beekne beekuu dha.", n: "Socrates" },
+      { t: "Barnoonni meeshaa waraanaa humna guddaa qabu dha; addunyaa jijjiiruuf si gargaara.", n: "Nelson Mandela" },
+      { t: "Mul'anni beekumsa caalaa barbaachisaa dha.", n: "Albert Einstein" },
+      { t: "Imala kiilomeetira kumaa tarkaanfii tokkoon jalqaba.", n: "Lao Tzu" }
+    ];
+
+    function haaraa() {
+      const j = jechoota[Math.floor(Math.random() * jechoota.length)];
+      document.getElementById("jecha").innerHTML = "“" + j.t + "”<br><small>— " + j.n + "</small>";
+    }
+    haaraa();
+  </script>
 </body>
 </html>
-h2>Calculator</h2>
-<input id="a" type="number" placeholder="Lakkoofsa 1">
-<input id="b" type="number" placeholder="Lakkoofsa 2">
-<button onclick="
-  document.getElementById('r').innerText =
-  Number(a.value) + Number(b.value)
-">Walitti ida'i</button>
-<p>Deebii: <span id="r"></span></p>
-<h2>Jechoota Beektotaa</h2>
-<blockquote id="jecha" style="font-size:20px; max-width:500px; margin:20px auto;"></blockquote>
-<button onclick="haaraa()">Jecha haaraa</button>
-
-<script>
-const jechoota = [
-  { t: "Beekumsi humna dha.", n: "Francis Bacon" },
-  { t: "Ogummaan dhugaa tokkicha waan hin beekne beekuu dha.", n: "Socrates" },
-  { t: "Barnoonni meeshaa waraanaa humna guddaa qabu dha; addunyaa jijjiiruuf si gargaara.", n: "Nelson Mandela" },
-  { t: "Mul'anni beekumsa caalaa barbaachisaa dha.", n: "Albert Einstein" },
-  { t: "Imala kiilomeetira kumaa tarkaanfii tokkoon jalqaba.", n: "Lao Tzu" }
-];
-
-function haaraa() {
-  const j = jechoota[Math.floor(Math.random() * jechoota.length)];
-  document.getElementById("jecha").innerHTML = "“" + j.t + "”<br><small>— " + j.n + "</small>";
-}
-haaraa();

@@ -1,85 +1,148 @@
 <!DOCTYPE html>
 <html lang="om">
 <head>
-
   <link rel="manifest" href="manifest.json">
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
-  }
-</script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>App Mulatu</title>
+  <title>Qoricha Qori</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0d1117;
-      color: white;
-      text-align: center;
-      padding: 30px 20px;
-    }
-    h1, h2 { color: #58a6ff; }
-    input {
-      padding: 10px;
-      font-size: 16px;
-      margin: 5px;
-      width: 130px;
-      border-radius: 6px;
-      border: none;
-    }
-    button {
-      background: #238636;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      font-size: 16px;
-      border-radius: 8px;
-      margin: 8px;
-    }
-    .box {
-      background: #161b22;
-      border-radius: 12px;
-      padding: 20px;
-      margin: 20px auto;
-      max-width: 500px;
-    }
+    body { font-family: Arial, sans-serif; background: #0d1117; color: white; text-align: center; padding: 24px 16px; }
+    h1 { color: #58a6ff; font-size: 26px; }
+    .box { background: #161b22; border-radius: 12px; padding: 20px; margin: 16px auto; max-width: 500px; }
+    button, label.btn { background: #238636; color: white; border: none; padding: 14px 24px; font-size: 17px; border-radius: 8px; margin: 8px; display: inline-block; }
+    input[type=file] { display: none; }
+    input[type=date] { padding: 10px; font-size: 16px; border-radius: 6px; border: none; }
+    img { max-width: 100%; border-radius: 8px; margin-top: 10px; }
+    #result { font-size: 22px; font-weight: bold; margin-top: 16px; padding: 14px; border-radius: 10px; display: none; }
+    .ok { background: #12391d; color: #3fb950; }
+    .bad { background: #4a1414; color: #ff7b72; }
+    .warn { background: #4a3a10; color: #e3b341; }
+    small { color: #8b949e; display: block; margin-top: 8px; }
+    pre { text-align: left; white-space: pre-wrap; font-size: 12px; color: #8b949e; }
   </style>
 </head>
 <body>
-  <h1>MULATU TESFAYE APP.</h1>
-  <p>Hojii koo jalqabeera.</p>
+  <h1>QORICHA QORI</h1>
+  <p>Suuraa qorichaa kaasi, guyyaa xumuraa (EXP) agarsiisa.</p>
 
   <div class="box">
-    <h2>Calculator</h2>
-    <input id="a" type="number" placeholder="Lakkoofsa 1">
-    <input id="b" type="number" placeholder="Lakkoofsa 2">
+    <label class="btn">📷 Suuraa kaasi
+      <input id="foto" type="file" accept="image/*" capture="environment">
+    </label>
+    <img id="preview" style="display:none">
+    <p id="status"></p>
+    <div id="result"></div>
+    <small>Guyyaa EXP agarsiisu suuraa keessatti ifatti mul'achuu qaba.</small>
+  </div>
+
+  <div class="box">
+    <h3>Yoo suuraan hin dubbifamne, guyyaa mataan galchi</h3>
+    <input id="manual" type="date">
     <br>
-    <button onclick="document.getElementById('r').innerText = Number(document.getElementById('a').value) + Number(document.getElementById('b').value)">Walitti ida'i</button>
-    <p>Deebii: <span id="r"></span></p>
+    <button onclick="manualCheck()">Ilaali</button>
   </div>
 
-  <div class="box">
-    <h2>Jechoota Beektotaa</h2>
-    <blockquote id="jecha" style="font-size:20px; margin:15px 0;"></blockquote>
-    <button onclick="haaraa()">Jecha haaraa</button>
-  </div>
+  <div class="box"><pre id="raw"></pre></div>
 
   <script>
-    const jechoota = [
-      { t: "Beekumsi humna dha.", n: "Francis Bacon" },
-      { t: "Ogummaan dhugaa tokkicha waan hin beekne beekuu dha.", n: "Socrates" },
-      { t: "Barnoonni meeshaa waraanaa humna guddaa qabu dha; addunyaa jijjiiruuf si gargaara.", n: "Nelson Mandela" },
-      { t: "Mul'anni beekumsa caalaa barbaachisaa dha.", n: "Albert Einstein" },
-      { t: "Imala kiilomeetira kumaa tarkaanfii tokkoon jalqaba.", n: "Lao Tzu" }
-    ];
+    const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
-    function haaraa() {
-      const j = jechoota[Math.floor(Math.random() * jechoota.length)];
-      document.getElementById("jecha").innerHTML = "“" + j.t + "”<br><small>— " + j.n + "</small>";
+    function endOfMonth(y, m) { return new Date(y, m, 0); }
+    function fixYear(y) { y = parseInt(y, 10); return y < 100 ? 2000 + y : y; }
+
+    function findDates(text) {
+      const t = text.toUpperCase();
+      const found = [];
+      let m;
+
+      let r = /(\d{1,2})[\/\-.\s](\d{1,2})[\/\-.\s](\d{4}|\d{2})\b/g;
+      while ((m = r.exec(t))) {
+        const d = +m[1], mo = +m[2], y = fixYear(m[3]);
+        if (mo >= 1 && mo <= 12 && d >= 1 && d <= 31) found.push(new Date(y, mo - 1, d));
+      }
+
+      r = /\b(\d{4})[\/\-.](\d{1,2})(?:[\/\-.](\d{1,2}))?\b/g;
+      while ((m = r.exec(t))) {
+        const y = +m[1], mo = +m[2];
+        if (mo >= 1 && mo <= 12 && y >= 2000 && y <= 2100)
+          found.push(m[3] ? new Date(y, mo - 1, +m[3]) : endOfMonth(y, mo));
+      }
+
+      r = /\b(\d{1,2})[\/\-.](\d{4})\b/g;
+      while ((m = r.exec(t))) {
+        const mo = +m[1], y = +m[2];
+        if (mo >= 1 && mo <= 12 && y >= 2000 && y <= 2100) found.push(endOfMonth(y, mo));
+      }
+
+      r = /\b(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*[\s.\-\/,]*(\d{4}|\d{2})\b/g;
+      while ((m = r.exec(t))) {
+        const mo = MONTHS.indexOf(m[1]) + 1, y = fixYear(m[2]);
+        found.push(endOfMonth(y, mo));
+      }
+      return found;
     }
-    haaraa();
+
+    function show(cls, msg) {
+      const el = document.getElementById('result');
+      el.className = cls;
+      el.style.display = 'block';
+      el.innerHTML = msg;
+    }
+
+    function judge(expiry) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const exp = new Date(expiry); exp.setHours(0, 0, 0, 0);
+      const txt = exp.toLocaleDateString('en-GB');
+      const days = Math.round((exp - today) / 86400000);
+      if (exp < today) {
+        show('bad', '❌ EXPIRED (yeroon isaa darbeera)<br><small>Guyyaa EXP: ' + txt + '. Hin fayyadamin.</small>');
+      } else if (days <= 30) {
+        show('warn', '⚠️ NOT EXPIRED, garuu dhiyootti xumurama<br><small>Guyyaa EXP: ' + txt + ' (guyyaa ' + days + ' hafe)</small>');
+      } else {
+        show('ok', '✅ NOT EXPIRED (yeroon isaa hin darbine)<br><small>Guyyaa EXP: ' + txt + '</small>');
+      }
+    }
+
+    function manualCheck() {
+      const v = document.getElementById('manual').value;
+      if (!v) return;
+      judge(new Date(v));
+    }
+
+    document.getElementById('foto').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const img = document.getElementById('preview');
+      img.src = URL.createObjectURL(file);
+      img.style.display = 'block';
+      document.getElementById('result').style.display = 'none';
+      const status = document.getElementById('status');
+      status.textContent = 'Dubbisaa jira... (yeroo jalqabaaf internetii barbaada)';
+      try {
+        const res = await Tesseract.recognize(file, 'eng');
+        const text = res.data.text;
+        document.getElementById('raw').textContent = 'Barreeffama dubbifame:\n' + text;
+        const dates = findDates(text);
+        if (!dates.length) {
+          status.textContent = '';
+          show('warn', '⚠️ Guyyaan hin argamne.<br><small>Suuraa ifa ta\'e irra deebi\'ii kaasi, yookaan guyyaa mataan galchi.</small>');
+          return;
+        }
+        const expiry = new Date(Math.max.apply(null, dates));
+        status.textContent = '';
+        judge(expiry);
+      } catch (err) {
+        status.textContent = '';
+        show('warn', '⚠️ Dogoggora: internetii kee ilaali, irra deebi\'ii yaali.');
+      }
+    });
   </script>
 </body>
 </html>
-
